@@ -1,17 +1,16 @@
 #!/bin/bash
-#SBATCH --job-name=eu4t_8020
+#SBATCH --job-name=train-gpt
 #SBATCH --cpus-per-task=7
 #SBATCH --ntasks-per-node=8
-#SBATCH --nodes=64
+#SBATCH --nodes=16
 #SBATCH --mem=480G
 #SBATCH --partition=standard-g
-#SBATCH --time=47:59:00
+#SBATCH --time=40:00:00
 #SBATCH --exclusive
 #SBATCH --gpus-per-node=mi250:8
 #SBATCH --account=project_462000353
 #SBATCH --output logs/%j.out
 #SBATCH --error logs/%j.err
-
 
 # This is a slurm script for training generative models on LUMI using
 # Megatron-LM pretrain_gpt.py. This script defines defaults for
@@ -86,7 +85,7 @@ module purge
 CONTAINER=/appl/local/containers/sif-images/lumi-pytorch-rocm-6.2.4-python-3.12-pytorch-v2.6.0.sif
 
 # Directories to map into container
-BIND_DIRS="/pfs,/scratch,/projappl,/project,/flash,/appl,/usr/lib64/libjansson.so.4,/usr/lib64/libcxi.so.1,/opt/cray,/var/spool/slurmd"
+BIND_DIRS="/pfs,/scratch,/projappl,/project,/flash,/appl,/usr/lib64/libjansson.so.4,/usr/lib64/libcxi.so.1,/opt/cray,/var/spool/slurmd" ### Ville's script: used 'SINGULARITY_BIND' instead of 'BIND_DIRS'. Added '/boot' to the bind directories. Removed: '/usr/lib64/libjansson.so.4', '/usr/lib64/libcxi.so.1'
 
 # Avoid conflicts with $HOME/.local
 export PYTHONUSERBASE=""
@@ -101,8 +100,7 @@ BIND_MASK="0x${c}000000000000,0x${c}00000000000000,0x${c}0000,0x${c}000000,0x${c
 
 # PATHS
 BASE_DIR="$SLURM_SUBMIT_DIR"
-#OUTPUT_DIR="$BASE_DIR/checkpoints_megatron/eu4t_8020"
-OUTPUT_DIR="/scratch/project_462000963/users/vitiugin/checkpoints_megatron/eu4t_8020"
+OUTPUT_DIR="$BASE_DIR/output"
 CHECKPOINT_PATH="$OUTPUT_DIR/checkpoints"
 TENSORBOARD_DIR="$OUTPUT_DIR/tensorboard/$SLURM_JOB_NAME-$SLURM_JOBID"
 WANDB_DIR="$OUTPUT_DIR/wandb"
@@ -110,8 +108,8 @@ WANDB_DIR="$OUTPUT_DIR/wandb"
 mkdir -p "$CHECKPOINT_PATH"    # This needs to exist
 
 # WEIGHTS & BIASES CONFIG
-WANDB_PROJECT="hplt2c_euro_4T"
-WANDB_EXP_NAME="hplt2c_euro_4T_8020_2"
+WANDB_PROJECT="openeurollm"
+WANDB_EXP_NAME="test"
 
 # Script that is used to launch on GPU nodes
 LAUNCH_SCRIPT="$BASE_DIR/launch.sh"
@@ -130,7 +128,7 @@ export MASTER_PORT=9999    # TODO add in job ID
 export WORLD_SIZE=$SLURM_NTASKS    # Note: only valid if ntasks==ngpus
 
 # OMP THREADING
-export OMP_NUM_THREADS=2    # OMP_NUM_THREADS=1 is the safe option
+export OMP_NUM_THREADS=2  # OMP_NUM_THREADS=1 is the safe option ### Ville's script: OMP_NUM_THREADS is set to 1
 export HSA_ENABLE_SDMA=0
 
 # This setting is reported to provide a performance improvement
@@ -148,7 +146,7 @@ export NCCL_NET_GDR_LEVEL=PHB
 export HSA_FORCE_FINE_GRAIN_PCIE=1
 
 # DEBUGGING, INCREASE VERBOSITY IN LOGS
-# export MIOPEN_ENABLE_LOGGING=1
+# Second script: commented out MIOPEN_ENABLE_LOGGING
 export PYTHONWARNINGS=ignore
 # export TORCH_SHOW_CPP_STACKTRACES=1
 # export NCCL_DEBUG=INFO
@@ -157,6 +155,14 @@ export PYTHONWARNINGS=ignore
 # export NCCL_DEBUG_FILE=$OUTPUT_DIR/nccl-debug-${SLURM_JOB_NAME}-${SLURM_JOBID}.log #Move verbose nccl logging to its own file
 export NVTE_DEBUG=0
 export NVTE_DEBUG_LEVEL=0
+
+# Second script: added a section on TORCH COMPILE/TORCHINDUCTOR variables
+# Second script: added a section on LIBFABRIC variables
+# Second script: added a section on NCCL/RCCL variables
+# Second script: added NCCL_PROTO=Simple,LL
+# Second script: added NCCL_CHECKS_DISABLE=1
+# Second script: enabled NCCL_DMABUF_ENABLE=1
+# Second script: added NCCL_TUNER_PLUGIN
 
 ######################################################################
 #
@@ -177,7 +183,9 @@ export HF_HOME=$PWD/cache
 
 # DATA
 DATA_PATH="0.0295 /scratch/project_462000615/vitiugin/data_tok/deu/hplt2c-gemma-3/hplt2c_deu 0.0249 /scratch/project_462000615/vitiugin/data_tok/fra/hplt2c-gemma-3/hplt2c_fra 0.0309 /scratch/project_462000615/vitiugin/data_tok/spa/hplt2c-gemma-3/hplt2c_spa 0.0063 /scratch/project_462000615/vitiugin/data_tok/ces/hplt2c-gemma-3/hplt2c_ces 0.0027 /scratch/project_462000615/vitiugin/data_tok/dan/hplt2c-gemma-3/hplt2c_dan 0.0076 /scratch/project_462000615/vitiugin/data_tok/ell/hplt2c-gemma-3/hplt2c_ell 0.0035 /scratch/project_462000615/vitiugin/data_tok/fin/hplt2c-gemma-3/hplt2c_fin 0.0052 /scratch/project_462000615/vitiugin/data_tok/hun/hplt2c-gemma-3/hplt2c_hun 0.0140 /scratch/project_462000615/vitiugin/data_tok/ita/hplt2c-gemma-3/hplt2c_ita 0.0080 /scratch/project_462000615/vitiugin/data_tok/nld/hplt2c-gemma-3/hplt2c_nld 0.0129 /scratch/project_462000615/vitiugin/data_tok/pol/hplt2c-gemma-3/hplt2c_pol 0.0153 /scratch/project_462000615/vitiugin/data_tok/por/hplt2c-gemma-3/hplt2c_por 0.0050 /scratch/project_462000615/vitiugin/data_tok/ron/hplt2c-gemma-3/hplt2c_ron 0.0050 /scratch/project_462000615/vitiugin/data_tok/swe/hplt2c-gemma-3/hplt2c_swe 0.0022 /scratch/project_462000615/vitiugin/data_tok/bul/hplt2c-gemma-3/hplt2c_bul 0.0008 /scratch/project_462000615/vitiugin/data_tok/est/hplt2c-gemma-3/hplt2c_est 0.0010 /scratch/project_462000615/vitiugin/data_tok/hrv/hplt2c-gemma-3/hplt2c_hrv 0.0012 /scratch/project_462000615/vitiugin/data_tok/lit/hplt2c-gemma-3/hplt2c_lit 0.0006 /scratch/project_462000615/vitiugin/data_tok/lvs/hplt2c-gemma-3/hplt2c_lvs 0.0016 /scratch/project_462000615/vitiugin/data_tok/slk/hplt2c-gemma-3/hplt2c_slk 0.0008 /scratch/project_462000615/vitiugin/data_tok/slv/hplt2c-gemma-3/hplt2c_slv 0.0005 /scratch/project_462000615/vitiugin/data_tok/gle/hplt2c-gemma-3/hplt2c_gle 0.0005 /scratch/project_462000615/vitiugin/data_tok/mlt/hplt2c-gemma-3/hplt2c_mlt 0.0005 /scratch/project_462000615/vitiugin/data_tok/als/hplt2c-gemma-3/hplt2c_als 0.0010 /scratch/project_462000615/vitiugin/data_tok/bos/hplt2c-gemma-3/hplt2c_bos 0.0012 /scratch/project_462000615/vitiugin/data_tok/cat/hplt2c-gemma-3/hplt2c_cat 0.0005 /scratch/project_462000615/vitiugin/data_tok/eus/hplt2c-gemma-3/hplt2c_eus 0.0005 /scratch/project_462000615/vitiugin/data_tok/glg/hplt2c-gemma-3/hplt2c_glg 0.0005 /scratch/project_462000615/vitiugin/data_tok/isl/hplt2c-gemma-3/hplt2c_isl 0.0005 /scratch/project_462000615/vitiugin/data_tok/kat/hplt2c-gemma-3/hplt2c_kat 0.0005 /scratch/project_462000615/vitiugin/data_tok/mkd/hplt2c-gemma-3/hplt2c_mkd 0.0027 /scratch/project_462000615/vitiugin/data_tok/nob/hplt2c-gemma-3/hplt2c_nob 0.0001 /scratch/project_462000615/vitiugin/data_tok/nno/hplt2c-gemma-3/hplt2c_nno 0.0005 /scratch/project_462000615/vitiugin/data_tok/srp/hplt2c-gemma-3/hplt2c_srp 0.0077 /scratch/project_462000615/vitiugin/data_tok/tur/hplt2c-gemma-3/hplt2c_tur 0.0040 /scratch/project_462000615/vitiugin/data_tok/ukr/hplt2c-gemma-3/hplt2c_ukr 0.3431 /scratch/project_462000353/data/nemotron-cc/tokenized-gemma-3/medium-high-actual 0.3767 /scratch/project_462000353/data/nemotron-cc/tokenized-gemma-3/high-actual 0.0720 /scratch/project_462000615/data/starcoder/tokenized-gemma-3/starcoderdata 0.0080 /scratch/project_462000963/preprocessed/gemma-3/HuggingFaceTB/finemath/finemath-4plus-train"
+# Second script: changes the data path
 DATA_CACHE_PATH="$BASE_DIR/cache"
+# Second script: changed data cache path
 TOKENIZER_MODEL="google/gemma-3-27b-pt"
 
 # MODEL
@@ -190,6 +198,12 @@ TIE_WORD_EMBEDDINGS=1
 INIT_METHOD_STD=0.02
 SEQ_LENGTH=2048
 ROTARY_BASE=10000    # Default, recommend larger for higher seq len
+# Second script: added if/else block to set model parameters based on a MODEL_SIZE variable.
+# Second script: added a NUM_KV_HEADS variable.
+# Second script: changes SEQ_LENGTH to a variable
+# Second script: changes INIT_METHOD_STD to a variable
+# Second script: removed ROTARY_BASE
+# Second script: removed TIE_WORD_EMBEDDINGS
 
 # PARALLELISM
 PIPELINE_MODEL_PARALLEL_SIZE=1
@@ -197,6 +211,7 @@ TENSOR_MODEL_PARALLEL_SIZE=1
 CONTEXT_PARALLEL_SIZE=1
 NUM_LAYERS_PER_VIRTUAL_PIPELINE_STAGE=1
 PROFILE=0
+# Second script: parallelism is passed as command-line arguments instead of variables.
 
 # OPTIMIZER
 ADAM_BETA1=0.9
@@ -208,6 +223,11 @@ WARMUP_FRACTION=1/10 # 25000
 COOLDOWN_FRACTION=1/5
 CLIP_GRAD=1.0
 WEIGHT_DECAY=0.05
+# Second script: Adam EPS changed to 1e-5
+# Second script: LR, MIN_LR, WARMUP_FRACTION, and COOLDOWN_FRACTION are set as variables
+# Second script: added --accumulate-allreduce-grads-in-fp32 to model arguments
+# Second script: added --overlap-param-gather to model arguments
+# Second script: added --no-one-logger to output arguments
 
 # TRAINING
 FSDP=0
@@ -215,6 +235,8 @@ GLOBAL_BATCH_SIZE=2048
 MICRO_BATCH_SIZE=2 # changed for 4TT training
 RECOMPUTATION=0
 TRAIN_TOKENS=4_000_000_000_000    # TRAIN_ITERS computed from this
+# Second script: changed TRAIN_TOKENS to 100_000_000_000
+# Second script: GLOBAL_BATCH_SIZE and MICRO_BATCH_SIZE are set as variables
 
 # SAVING AND EVALUATION
 LOG_INTERVAL=1
@@ -235,8 +257,8 @@ EVAL_ITERS=100
 confirm_unset() {
     local varname="$1"
     if [ -n "${!varname+x}" ]; then
-	echo "Error: variable '$varname' should not be set." >&2
-	exit 1
+    echo "Error: variable '$varname' should not be set." >&2
+    exit 1
     fi
 }
 confirm_unset "TRAIN_ITERS"
@@ -256,6 +278,7 @@ TRAIN_ITERS=$(divide_rounding_up $TRAIN_TOKENS $ITER_TOKENS)
 # and COOLDOWN_FRACTION
 #LR_WARMUP_ITERS=$((TRAIN_ITERS*${WARMUP_FRACTION}))
 LR_WARMUP_ITERS=25000
+# Second script: has a check to cap LR_WARMUP_ITERS at 25000
 LR_WSD_DECAY_ITERS=$((TRAIN_ITERS*${COOLDOWN_FRACTION}))
 
 # LR_DECAY_ITERS is simply set to TRAIN_ITERS
@@ -281,6 +304,7 @@ DATA_ARGS=(
     --dataloader-type single
     --num-workers 2   # Some issues with this, lower values are safer
 )
+# Second script: changes num-workers to 5
 
 MODEL_ARGS=(
     --num-layers $NUM_LAYERS
@@ -298,34 +322,38 @@ fi
 
 if [ "$TIE_WORD_EMBEDDINGS" = "0" ]; then
     MODEL_ARGS+=(
-	--untie-embeddings-and-output-weights
+    --untie-embeddings-and-output-weights
     )
 fi
+# Second script: adds --tokenizer-type GPT2BPETokenizer instead of HuggingFaceTokenizer
 
 if [ "$FSDP" = "1" ]; then
     PARALLEL_ARGS=(
-	--use-torch-fsdp2
+    --use-torch-fsdp2
     )
 else
     PARALLEL_ARGS=(
-	--tensor-model-parallel-size $TENSOR_MODEL_PARALLEL_SIZE
-	--pipeline-model-parallel-size $PIPELINE_MODEL_PARALLEL_SIZE
-	--context-parallel-size $CONTEXT_PARALLEL_SIZE
-	--sequence-parallel
-	--use-distributed-optimizer
+    --tensor-model-parallel-size $TENSOR_MODEL_PARALLEL_SIZE
+    --pipeline-model-parallel-size $PIPELINE_MODEL_PARALLEL_SIZE
+    --context-parallel-size $CONTEXT_PARALLEL_SIZE
+    --sequence-parallel
+    --use-distributed-optimizer
     )
 fi
+# Second script: removes --context-parallel-size
+# Second script: added --overlap-param-gather
 
 if [ "$PROFILE" = "1" ]; then
     PROFILE_ARGS=(
-	--use-pytorch-profiler
-	--profile-ranks 0
-	--profile-step-start 5
-	--profile-step-end 7
+    --use-pytorch-profiler
+    --profile-ranks 0
+    --profile-step-start 5
+    --profile-step-end 7
     )
 else
     PROFILE_ARGS=()
 fi
+# Second script: changes the profiling ranks and step numbers.
 
 MODEL_ARGS+=(
     --use-flash-attn
@@ -352,6 +380,10 @@ MODEL_ARGS+=(
     --distributed-timeout-minutes 30
     --overlap-grad-reduce
 )
+# Second script: removes --no-async-tensor-model-parallel-allreduce and --no-bias-dropout-fusion
+# Second script: adds --accumulate-allreduce-grads-in-fp32
+# Second script: adds --use-rotary-position-embeddings
+# Second script: removes --rotary-base
 
 OPTIMIZER_ARGS=(
     --optimizer adam
@@ -368,6 +400,7 @@ OPTIMIZER_ARGS=(
     --clip-grad $CLIP_GRAD
     --weight-decay $WEIGHT_DECAY
 )
+# Second script: adds --use-distributed-optimizer
 
 OUTPUT_ARGS=(
     --eval-interval $EVAL_INTERVAL
@@ -381,19 +414,22 @@ OUTPUT_ARGS=(
     --log-progress
     --log-interval $LOG_INTERVAL
 )
+# Second script: removed --log-progress
+# Second script: added --log-timers-to-tensorboard, --log-params-norm, and --no-one-logger
+# Second script: output args are conditionally added if ENABLE_WANDB is 1
 
 # Interleaved pipeline scheduling is only possible with pipeline
 # parallel degree > 1.
 if [ $PIPELINE_MODEL_PARALLEL_SIZE -gt 1 ] && [ $NUM_LAYERS_PER_VIRTUAL_PIPELINE_STAGE -gt 1 ]; then
     PARALLEL_ARGS+=(
-	--num-layers-per-virtual-pipeline-stage $NUM_LAYERS_PER_VIRTUAL_PIPELINE_STAGE
+    --num-layers-per-virtual-pipeline-stage $NUM_LAYERS_PER_VIRTUAL_PIPELINE_STAGE
     )
 fi
 
 if [ "$RECOMPUTATION" = "1" ]; then
     MODEL_ARGS+=(
-	--recompute-activations
-	--recompute-granularity selective
+    --recompute-activations
+    --recompute-granularity selective
     )
 fi
 
@@ -404,6 +440,7 @@ CHECKPOINT_ARGS=(
     --save "$CHECKPOINT_PATH"
     --save-interval $SAVE_INTERVAL
 )
+# Second script: removes --load
 
 COMMAND=" \
     Megatron-LM/pretrain_gpt.py \
@@ -415,6 +452,7 @@ COMMAND=" \
     "${DATA_ARGS[@]}" \
     "${PROFILE_ARGS[@]}" \
 "
+# Second script: builds the command string differently by concatenating argument strings instead of arrays
 
 ######################################################################
 #
@@ -442,3 +480,5 @@ srun \
     $COMMAND
 
 echo "END $SLURM_JOBID: $(date)"
+# Second script: added 'wd' variable and used it to bind the current directory
+# Second script: also added 'echo' statements to print container and working directory
