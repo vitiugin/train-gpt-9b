@@ -183,51 +183,37 @@ export HF_HOME=$PWD/cache
 
 # DATA
 DATA_PATH="0.0295 /scratch/project_462000615/vitiugin/data_tok/deu/hplt2c-gemma-3/hplt2c_deu 0.0249 /scratch/project_462000615/vitiugin/data_tok/fra/hplt2c-gemma-3/hplt2c_fra 0.0309 /scratch/project_462000615/vitiugin/data_tok/spa/hplt2c-gemma-3/hplt2c_spa 0.0063 /scratch/project_462000615/vitiugin/data_tok/ces/hplt2c-gemma-3/hplt2c_ces 0.0027 /scratch/project_462000615/vitiugin/data_tok/dan/hplt2c-gemma-3/hplt2c_dan 0.0076 /scratch/project_462000615/vitiugin/data_tok/ell/hplt2c-gemma-3/hplt2c_ell 0.0035 /scratch/project_462000615/vitiugin/data_tok/fin/hplt2c-gemma-3/hplt2c_fin 0.0052 /scratch/project_462000615/vitiugin/data_tok/hun/hplt2c-gemma-3/hplt2c_hun 0.0140 /scratch/project_462000615/vitiugin/data_tok/ita/hplt2c-gemma-3/hplt2c_ita 0.0080 /scratch/project_462000615/vitiugin/data_tok/nld/hplt2c-gemma-3/hplt2c_nld 0.0129 /scratch/project_462000615/vitiugin/data_tok/pol/hplt2c-gemma-3/hplt2c_pol 0.0153 /scratch/project_462000615/vitiugin/data_tok/por/hplt2c-gemma-3/hplt2c_por 0.0050 /scratch/project_462000615/vitiugin/data_tok/ron/hplt2c-gemma-3/hplt2c_ron 0.0050 /scratch/project_462000615/vitiugin/data_tok/swe/hplt2c-gemma-3/hplt2c_swe 0.0022 /scratch/project_462000615/vitiugin/data_tok/bul/hplt2c-gemma-3/hplt2c_bul 0.0008 /scratch/project_462000615/vitiugin/data_tok/est/hplt2c-gemma-3/hplt2c_est 0.0010 /scratch/project_462000615/vitiugin/data_tok/hrv/hplt2c-gemma-3/hplt2c_hrv 0.0012 /scratch/project_462000615/vitiugin/data_tok/lit/hplt2c-gemma-3/hplt2c_lit 0.0006 /scratch/project_462000615/vitiugin/data_tok/lvs/hplt2c-gemma-3/hplt2c_lvs 0.0016 /scratch/project_462000615/vitiugin/data_tok/slk/hplt2c-gemma-3/hplt2c_slk 0.0008 /scratch/project_462000615/vitiugin/data_tok/slv/hplt2c-gemma-3/hplt2c_slv 0.0005 /scratch/project_462000615/vitiugin/data_tok/gle/hplt2c-gemma-3/hplt2c_gle 0.0005 /scratch/project_462000615/vitiugin/data_tok/mlt/hplt2c-gemma-3/hplt2c_mlt 0.0005 /scratch/project_462000615/vitiugin/data_tok/als/hplt2c-gemma-3/hplt2c_als 0.0010 /scratch/project_462000615/vitiugin/data_tok/bos/hplt2c-gemma-3/hplt2c_bos 0.0012 /scratch/project_462000615/vitiugin/data_tok/cat/hplt2c-gemma-3/hplt2c_cat 0.0005 /scratch/project_462000615/vitiugin/data_tok/eus/hplt2c-gemma-3/hplt2c_eus 0.0005 /scratch/project_462000615/vitiugin/data_tok/glg/hplt2c-gemma-3/hplt2c_glg 0.0005 /scratch/project_462000615/vitiugin/data_tok/isl/hplt2c-gemma-3/hplt2c_isl 0.0005 /scratch/project_462000615/vitiugin/data_tok/kat/hplt2c-gemma-3/hplt2c_kat 0.0005 /scratch/project_462000615/vitiugin/data_tok/mkd/hplt2c-gemma-3/hplt2c_mkd 0.0027 /scratch/project_462000615/vitiugin/data_tok/nob/hplt2c-gemma-3/hplt2c_nob 0.0001 /scratch/project_462000615/vitiugin/data_tok/nno/hplt2c-gemma-3/hplt2c_nno 0.0005 /scratch/project_462000615/vitiugin/data_tok/srp/hplt2c-gemma-3/hplt2c_srp 0.0077 /scratch/project_462000615/vitiugin/data_tok/tur/hplt2c-gemma-3/hplt2c_tur 0.0040 /scratch/project_462000615/vitiugin/data_tok/ukr/hplt2c-gemma-3/hplt2c_ukr 0.3431 /scratch/project_462000353/data/nemotron-cc/tokenized-gemma-3/medium-high-actual 0.3767 /scratch/project_462000353/data/nemotron-cc/tokenized-gemma-3/high-actual 0.0720 /scratch/project_462000615/data/starcoder/tokenized-gemma-3/starcoderdata 0.0080 /scratch/project_462000963/preprocessed/gemma-3/HuggingFaceTB/finemath/finemath-4plus-train"
-# Second script: changes the data path
 DATA_CACHE_PATH="$BASE_DIR/cache"
-# Second script: changed data cache path
 TOKENIZER_MODEL="google/gemma-3-27b-pt"
 
 # MODEL
-NUM_LAYERS=24
-HIDDEN_SIZE=2048
-FFN_HIDDEN_SIZE=$((4*HIDDEN_SIZE))
+NUM_LAYERS=32 # original value — 24
+HIDDEN_SIZE=4096 # original value — 2048
+FFN_HIDDEN_SIZE=14336 # original value — $((4*HIDDEN_SIZE))
 NUM_ATTENTION_HEADS=32
-NUM_QUERY_GROUPS=32    # No GQA when NUM_QUERY_GROUPS=NUM_ATTENTION_HEADS
-TIE_WORD_EMBEDDINGS=1
-INIT_METHOD_STD=0.02
+NUM_QUERY_GROUPS=8 # original value - 32    # No GQA when NUM_QUERY_GROUPS=NUM_ATTENTION_HEADS
+# original script  — TIE_WORD_EMBEDDINGS=1
+INIT_METHOD_STD=0.00747017 # original script — 0.02
 SEQ_LENGTH=2048
-ROTARY_BASE=10000    # Default, recommend larger for higher seq len
-# Second script: added if/else block to set model parameters based on a MODEL_SIZE variable.
-# Second script: added a NUM_KV_HEADS variable.
-# Second script: changes SEQ_LENGTH to a variable
-# Second script: changes INIT_METHOD_STD to a variable
-# Second script: removed ROTARY_BASE
-# Second script: removed TIE_WORD_EMBEDDINGS
+NUM_KV_HEADS=8 ### added in Ville's script
 
-# PARALLELISM
+# PARALLELISM Ville's script: parallelism is passed as command-line arguments instead of variables.
 PIPELINE_MODEL_PARALLEL_SIZE=1
 TENSOR_MODEL_PARALLEL_SIZE=1
 CONTEXT_PARALLEL_SIZE=1
 NUM_LAYERS_PER_VIRTUAL_PIPELINE_STAGE=1
 PROFILE=0
-# Second script: parallelism is passed as command-line arguments instead of variables.
 
 # OPTIMIZER
 ADAM_BETA1=0.9
 ADAM_BETA2=0.95
-ADAM_EPS=1e-8
-LR=3e-4
+ADAM_EPS=1e-5 # original script:1e-8
+LR=3e-5 # based on Slack converstaion. original script: 3e-4
 MIN_LR=0
-WARMUP_FRACTION=1/10 # 25000
+WARMUP_FRACTION=1/10
 COOLDOWN_FRACTION=1/5
 CLIP_GRAD=1.0
 WEIGHT_DECAY=0.05
-# Second script: Adam EPS changed to 1e-5
-# Second script: LR, MIN_LR, WARMUP_FRACTION, and COOLDOWN_FRACTION are set as variables
-# Second script: added --accumulate-allreduce-grads-in-fp32 to model arguments
-# Second script: added --overlap-param-gather to model arguments
-# Second script: added --no-one-logger to output arguments
 
 # TRAINING
 FSDP=0
@@ -235,13 +221,11 @@ GLOBAL_BATCH_SIZE=2048
 MICRO_BATCH_SIZE=2 # changed for 4TT training
 RECOMPUTATION=0
 TRAIN_TOKENS=4_000_000_000_000    # TRAIN_ITERS computed from this
-# Second script: changed TRAIN_TOKENS to 100_000_000_000
-# Second script: GLOBAL_BATCH_SIZE and MICRO_BATCH_SIZE are set as variables
 
 # SAVING AND EVALUATION
 LOG_INTERVAL=1
-SAVE_INTERVAL=500
-EVAL_INTERVAL=2500
+SAVE_INTERVAL=1000 # changed for 4TT run to 5000
+EVAL_INTERVAL=2500 # changed for 4TT run to 10000
 EVAL_ITERS=100
 
 ######################################################################
@@ -276,9 +260,15 @@ TRAIN_ITERS=$(divide_rounding_up $TRAIN_TOKENS $ITER_TOKENS)
 
 # Set LR_WARMUP_ITERS and LR_WSD_DECAY_ITERS based on WARMUP_FRACTION
 # and COOLDOWN_FRACTION
-#LR_WARMUP_ITERS=$((TRAIN_ITERS*${WARMUP_FRACTION}))
-LR_WARMUP_ITERS=25000
-# Second script: has a check to cap LR_WARMUP_ITERS at 25000
+WARMUP_CALC=$((TRAIN_ITERS * ${WARMUP_FRACTION}))
+
+# Cap warmup iterations at 25000 to prevent excessively long warmup periods
+if [ $WARMUP_CALC -gt 25000 ]; then
+   LR_WARMUP_ITERS=25000
+else
+   LR_WARMUP_ITERS=$WARMUP_CALC
+fi
+
 LR_WSD_DECAY_ITERS=$((TRAIN_ITERS*${COOLDOWN_FRACTION}))
 
 # LR_DECAY_ITERS is simply set to TRAIN_ITERS
@@ -302,9 +292,8 @@ DATA_ARGS=(
     --tokenizer-model "$TOKENIZER_MODEL"
     --make-vocab-size-divisible-by 128
     --dataloader-type single
-    --num-workers 2   # Some issues with this, lower values are safer
+    --num-workers 5   # Some issues with this, lower values are safer, in Ville's script it was changed to 5
 )
-# Second script: changes num-workers to 5
 
 MODEL_ARGS=(
     --num-layers $NUM_LAYERS
@@ -320,12 +309,11 @@ if [ "$NUM_QUERY_GROUPS" != "$NUM_ATTENTION_HEADS" ]; then
     )
 fi
 
-if [ "$TIE_WORD_EMBEDDINGS" = "0" ]; then
-    MODEL_ARGS+=(
-    --untie-embeddings-and-output-weights
-    )
-fi
-# Second script: adds --tokenizer-type GPT2BPETokenizer instead of HuggingFaceTokenizer
+if [ "$TIE_WORD_EMBEDDINGS" = "0" ]; then   ### This part is commented in Ville's version
+    MODEL_ARGS+=(   ### This part is commented in Ville's version
+    --untie-embeddings-and-output-weights   ### This part is commented in Ville's version
+    )   ### This part is commented in Ville's version
+fi  ### This part is commented in Ville's version
 
 if [ "$FSDP" = "1" ]; then
     PARALLEL_ARGS=(
@@ -335,25 +323,22 @@ else
     PARALLEL_ARGS=(
     --tensor-model-parallel-size $TENSOR_MODEL_PARALLEL_SIZE
     --pipeline-model-parallel-size $PIPELINE_MODEL_PARALLEL_SIZE
-    --context-parallel-size $CONTEXT_PARALLEL_SIZE
+    --context-parallel-size $CONTEXT_PARALLEL_SIZE  ### Removed in Ville's version
     --sequence-parallel
     --use-distributed-optimizer
     )
 fi
-# Second script: removes --context-parallel-size
-# Second script: added --overlap-param-gather
 
 if [ "$PROFILE" = "1" ]; then
     PROFILE_ARGS=(
     --use-pytorch-profiler
-    --profile-ranks 0
-    --profile-step-start 5
+    --profile-ranks 0 # In Ville's script added $LAST_RANK: LAST_RANK=$((SLURM_NTASKS - 1))
+    --profile-step-start 6 # original script: 5
     --profile-step-end 7
     )
 else
     PROFILE_ARGS=()
 fi
-# Second script: changes the profiling ranks and step numbers.
 
 MODEL_ARGS+=(
     --use-flash-attn
@@ -361,7 +346,7 @@ MODEL_ARGS+=(
     --max-position-embeddings $SEQ_LENGTH
     --seq-length $SEQ_LENGTH
     --position-embedding-type rope
-    --rotary-base $ROTARY_BASE
+    --use-rotary-position-embeddings ### Original script: --rotary-base $ROTARY_BASE
     --disable-bias-linear
     --init-method-std $INIT_METHOD_STD
     --attention-dropout 0.0
@@ -372,18 +357,16 @@ MODEL_ARGS+=(
     --train-iters $TRAIN_ITERS
     --bf16
     --swiglu
-    --no-async-tensor-model-parallel-allreduce
+    # Original sctipt: --no-async-tensor-model-parallel-allreduce
     --no-masked-softmax-fusion
     --no-gradient-accumulation-fusion
-    --no-bias-dropout-fusion
+    # Original sctipt: --no-bias-dropout-fusion
     --no-rope-fusion    # buggy on AMD, do not enable without validating
     --distributed-timeout-minutes 30
     --overlap-grad-reduce
+    --overlap-param-gather
+    --accumulate-allreduce-grads-in-fp32
 )
-# Second script: removes --no-async-tensor-model-parallel-allreduce and --no-bias-dropout-fusion
-# Second script: adds --accumulate-allreduce-grads-in-fp32
-# Second script: adds --use-rotary-position-embeddings
-# Second script: removes --rotary-base
 
 OPTIMIZER_ARGS=(
     --optimizer adam
@@ -399,8 +382,8 @@ OPTIMIZER_ARGS=(
     --lr-wsd-decay-iters $LR_WSD_DECAY_ITERS
     --clip-grad $CLIP_GRAD
     --weight-decay $WEIGHT_DECAY
+    --use-distributed-optimizer ## Added in Ville's sxcript
 )
-# Second script: adds --use-distributed-optimizer
 
 OUTPUT_ARGS=(
     --eval-interval $EVAL_INTERVAL
@@ -436,11 +419,10 @@ fi
 CHECKPOINT_ARGS=(
     --ckpt-format torch    # "legacy" checkpoints; torch_dist is crashing
 #     --async-save    # requires --ckpt-format torch_dist
-    --load "$CHECKPOINT_PATH"
+    --load "$CHECKPOINT_PATH" # Ville's script: removes --load
     --save "$CHECKPOINT_PATH"
     --save-interval $SAVE_INTERVAL
 )
-# Second script: removes --load
 
 COMMAND=" \
     Megatron-LM/pretrain_gpt.py \
