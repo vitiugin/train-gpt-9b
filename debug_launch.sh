@@ -9,11 +9,11 @@ export MIOPEN_USER_DB_PATH="/tmp/$(whoami)-miopen-cache-$SLURM_NODEID"
 export MIOPEN_CUSTOM_CACHE_DIR=$MIOPEN_USER_DB_PATH
 
 # Set interfaces to be used by RCCL
-export NCCL_SOCKET_IFNAME=hsn # Ville's version
-export NCCL_NET_GDR_LEVEL=PHB # Ville's version
+#export NCCL_SOCKET_IFNAME=hsn # Ville's version
+#export NCCL_NET_GDR_LEVEL=PHB # Ville's version
 
 export RANK=$SLURM_PROCID
 export LOCAL_RANK=$SLURM_LOCALID
-export WORLD_SIZE=$((8 * SLURM_NNODES)) # Ville's version
+#export WORLD_SIZE=$((8 * SLURM_NNODES)) # Ville's version
 
 python3 -u "$@"
