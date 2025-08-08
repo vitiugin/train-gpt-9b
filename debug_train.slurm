@@ -5,10 +5,10 @@
 #SBATCH --nodes=16
 #SBATCH --mem=480G
 #SBATCH --partition=standard-g
-#SBATCH --time=40:00:00
+#SBATCH --time=48:00:00
 #SBATCH --exclusive
-#SBATCH --gpus-per-node=mi250:8
-#SBATCH --account=project_462000353
+#SBATCH --gpus-per-node=8
+#SBATCH --account=project_462000615
 #SBATCH --output logs/%j.out
 #SBATCH --error logs/%j.err
 
@@ -85,7 +85,7 @@ module purge
 CONTAINER=/appl/local/containers/sif-images/lumi-pytorch-rocm-6.2.4-python-3.12-pytorch-v2.6.0.sif
 
 # Directories to map into container
-BIND_DIRS="/pfs,/scratch,/projappl,/project,/flash,/appl,/usr/lib64/libjansson.so.4,/usr/lib64/libcxi.so.1,/opt/cray,/var/spool/slurmd" ### Ville's script: used 'SINGULARITY_BIND' instead of 'BIND_DIRS'. Added '/boot' to the bind directories. Removed: '/usr/lib64/libjansson.so.4', '/usr/lib64/libcxi.so.1'
+BIND_DIRS="/boot,/pfs,/scratch,/projappl,/project,/flash,/appl,/usr/lib64/libjansson.so.4,/usr/lib64/libcxi.so.1,/opt/cray,/var/spool/slurmd" # Added '/boot' to the bind directories from Ville's script
 
 # Avoid conflicts with $HOME/.local
 export PYTHONUSERBASE=""
@@ -128,7 +128,7 @@ export MASTER_PORT=9999    # TODO add in job ID
 export WORLD_SIZE=$SLURM_NTASKS    # Note: only valid if ntasks==ngpus
 
 # OMP THREADING
-export OMP_NUM_THREADS=2  # OMP_NUM_THREADS=1 is the safe option ### Ville's script: OMP_NUM_THREADS is set to 1
+export OMP_NUM_THREADS=1  # Changed from 2: OMP_NUM_THREADS=1 is the safe option
 export HSA_ENABLE_SDMA=0
 
 # This setting is reported to provide a performance improvement
@@ -146,23 +146,31 @@ export NCCL_NET_GDR_LEVEL=PHB
 export HSA_FORCE_FINE_GRAIN_PCIE=1
 
 # DEBUGGING, INCREASE VERBOSITY IN LOGS
-# Second script: commented out MIOPEN_ENABLE_LOGGING
 export PYTHONWARNINGS=ignore
 # export TORCH_SHOW_CPP_STACKTRACES=1
-# export NCCL_DEBUG=INFO
+#export NCCL_DEBUG=INFO
 # export RCCL_KERNEL_COLL_TRACE_ENABLE=1
-# export NCCL_DEBUG_SUBSYS=ALL
-# export NCCL_DEBUG_FILE=$OUTPUT_DIR/nccl-debug-${SLURM_JOB_NAME}-${SLURM_JOBID}.log #Move verbose nccl logging to its own file
+#export NCCL_DEBUG_SUBSYS=ALL
+#export NCCL_DEBUG_FILE=$OUTPUT_DIR/nccl-debug-${SLURM_JOB_NAME}-${SLURM_JOBID}.log #Move verbose nccl logging to its own file
 export NVTE_DEBUG=0
 export NVTE_DEBUG_LEVEL=0
 
-# Second script: added a section on TORCH COMPILE/TORCHINDUCTOR variables
-# Second script: added a section on LIBFABRIC variables
-# Second script: added a section on NCCL/RCCL variables
-# Second script: added NCCL_PROTO=Simple,LL
-# Second script: added NCCL_CHECKS_DISABLE=1
-# Second script: enabled NCCL_DMABUF_ENABLE=1
-# Second script: added NCCL_TUNER_PLUGIN
+export TORCH_COMPILE_DISABLE=1 # Added in Ville's script
+export TORCHINDUCTOR_FORCE_DISABLE_CACHES=1 # Added in Ville's script
+export TORCHINDUCTOR_UNIQUE_KERNEL_NAMES=1 # Added in Ville's script
+export TORCHINDUCTOR_COMPILE_THREADS=5 # Added in Ville's script
+
+#LIBFABRIC
+export FI_HMEM=rocr # Added in Ville's script
+export FI_HMEM_ROCR_USE_DMABUF=0 # Added in Ville's script
+export FI_MR_CACHE_MONITOR=userfaultfd # Added in Ville's script
+export FI_CXI_DEFAULT_CQ_SIZE=131072 # Added in Ville's script
+
+#NCCL/RCCL
+export NCCL_PROTO=Simple,LL  # Added in Ville's script
+export NCCL_CHECKS_DISABLE=1  # Added in Ville's script
+export NCCL_DMABUF_ENABLE=1  # Added in Ville's script
+export NCCL_TUNER_PLUGIN=/scratch/project_462000963/users/vitiugin/training/plugin/librccl-tuner.so # to use tuner plugin
 
 ######################################################################
 #
@@ -182,24 +190,25 @@ export HUGGING_FACE_HUB_TOKEN=$(cat ~/.huggingface/token)
 export HF_HOME=$PWD/cache
 
 # DATA
-DATA_PATH="0.0295 /scratch/project_462000615/vitiugin/data_tok/deu/hplt2c-gemma-3/hplt2c_deu 0.0249 /scratch/project_462000615/vitiugin/data_tok/fra/hplt2c-gemma-3/hplt2c_fra 0.0309 /scratch/project_462000615/vitiugin/data_tok/spa/hplt2c-gemma-3/hplt2c_spa 0.0063 /scratch/project_462000615/vitiugin/data_tok/ces/hplt2c-gemma-3/hplt2c_ces 0.0027 /scratch/project_462000615/vitiugin/data_tok/dan/hplt2c-gemma-3/hplt2c_dan 0.0076 /scratch/project_462000615/vitiugin/data_tok/ell/hplt2c-gemma-3/hplt2c_ell 0.0035 /scratch/project_462000615/vitiugin/data_tok/fin/hplt2c-gemma-3/hplt2c_fin 0.0052 /scratch/project_462000615/vitiugin/data_tok/hun/hplt2c-gemma-3/hplt2c_hun 0.0140 /scratch/project_462000615/vitiugin/data_tok/ita/hplt2c-gemma-3/hplt2c_ita 0.0080 /scratch/project_462000615/vitiugin/data_tok/nld/hplt2c-gemma-3/hplt2c_nld 0.0129 /scratch/project_462000615/vitiugin/data_tok/pol/hplt2c-gemma-3/hplt2c_pol 0.0153 /scratch/project_462000615/vitiugin/data_tok/por/hplt2c-gemma-3/hplt2c_por 0.0050 /scratch/project_462000615/vitiugin/data_tok/ron/hplt2c-gemma-3/hplt2c_ron 0.0050 /scratch/project_462000615/vitiugin/data_tok/swe/hplt2c-gemma-3/hplt2c_swe 0.0022 /scratch/project_462000615/vitiugin/data_tok/bul/hplt2c-gemma-3/hplt2c_bul 0.0008 /scratch/project_462000615/vitiugin/data_tok/est/hplt2c-gemma-3/hplt2c_est 0.0010 /scratch/project_462000615/vitiugin/data_tok/hrv/hplt2c-gemma-3/hplt2c_hrv 0.0012 /scratch/project_462000615/vitiugin/data_tok/lit/hplt2c-gemma-3/hplt2c_lit 0.0006 /scratch/project_462000615/vitiugin/data_tok/lvs/hplt2c-gemma-3/hplt2c_lvs 0.0016 /scratch/project_462000615/vitiugin/data_tok/slk/hplt2c-gemma-3/hplt2c_slk 0.0008 /scratch/project_462000615/vitiugin/data_tok/slv/hplt2c-gemma-3/hplt2c_slv 0.0005 /scratch/project_462000615/vitiugin/data_tok/gle/hplt2c-gemma-3/hplt2c_gle 0.0005 /scratch/project_462000615/vitiugin/data_tok/mlt/hplt2c-gemma-3/hplt2c_mlt 0.0005 /scratch/project_462000615/vitiugin/data_tok/als/hplt2c-gemma-3/hplt2c_als 0.0010 /scratch/project_462000615/vitiugin/data_tok/bos/hplt2c-gemma-3/hplt2c_bos 0.0012 /scratch/project_462000615/vitiugin/data_tok/cat/hplt2c-gemma-3/hplt2c_cat 0.0005 /scratch/project_462000615/vitiugin/data_tok/eus/hplt2c-gemma-3/hplt2c_eus 0.0005 /scratch/project_462000615/vitiugin/data_tok/glg/hplt2c-gemma-3/hplt2c_glg 0.0005 /scratch/project_462000615/vitiugin/data_tok/isl/hplt2c-gemma-3/hplt2c_isl 0.0005 /scratch/project_462000615/vitiugin/data_tok/kat/hplt2c-gemma-3/hplt2c_kat 0.0005 /scratch/project_462000615/vitiugin/data_tok/mkd/hplt2c-gemma-3/hplt2c_mkd 0.0027 /scratch/project_462000615/vitiugin/data_tok/nob/hplt2c-gemma-3/hplt2c_nob 0.0001 /scratch/project_462000615/vitiugin/data_tok/nno/hplt2c-gemma-3/hplt2c_nno 0.0005 /scratch/project_462000615/vitiugin/data_tok/srp/hplt2c-gemma-3/hplt2c_srp 0.0077 /scratch/project_462000615/vitiugin/data_tok/tur/hplt2c-gemma-3/hplt2c_tur 0.0040 /scratch/project_462000615/vitiugin/data_tok/ukr/hplt2c-gemma-3/hplt2c_ukr 0.3431 /scratch/project_462000353/data/nemotron-cc/tokenized-gemma-3/medium-high-actual 0.3767 /scratch/project_462000353/data/nemotron-cc/tokenized-gemma-3/high-actual 0.0720 /scratch/project_462000615/data/starcoder/tokenized-gemma-3/starcoderdata 0.0080 /scratch/project_462000963/preprocessed/gemma-3/HuggingFaceTB/finemath/finemath-4plus-train"
+DATA_PATH="1.0 /scratch/project_462000353/data/fineweb-edu/tokenized-gemma-3/fineweb-edu-350BT"
 DATA_CACHE_PATH="$BASE_DIR/cache"
 TOKENIZER_MODEL="google/gemma-3-27b-pt"
 
 # MODEL
 NUM_LAYERS=32 # original value — 24
 HIDDEN_SIZE=4096 # original value — 2048
-FFN_HIDDEN_SIZE=14336 # original value — $((4*HIDDEN_SIZE))
+FFN_HIDDEN_SIZE=$((4*HIDDEN_SIZE))
 NUM_ATTENTION_HEADS=32
-NUM_QUERY_GROUPS=8 # original value - 32    # No GQA when NUM_QUERY_GROUPS=NUM_ATTENTION_HEADS
-# original script  — TIE_WORD_EMBEDDINGS=1
+NUM_QUERY_GROUPS=32 # No GQA when NUM_QUERY_GROUPS=NUM_ATTENTION_HEADS
+
+TIE_WORD_EMBEDDINGS=1
 INIT_METHOD_STD=0.00747017 # original script — 0.02
 SEQ_LENGTH=2048
 NUM_KV_HEADS=8 ### added in Ville's script
+ROTARY_BASE=10000
 
-# PARALLELISM Ville's script: parallelism is passed as command-line arguments instead of variables.
 PIPELINE_MODEL_PARALLEL_SIZE=1
-TENSOR_MODEL_PARALLEL_SIZE=1
+TENSOR_MODEL_PARALLEL_SIZE=2 # based on Ville's script
 CONTEXT_PARALLEL_SIZE=1
 NUM_LAYERS_PER_VIRTUAL_PIPELINE_STAGE=1
 PROFILE=0
@@ -292,7 +301,7 @@ DATA_ARGS=(
     --tokenizer-model "$TOKENIZER_MODEL"
     --make-vocab-size-divisible-by 128
     --dataloader-type single
-    --num-workers 5   # Some issues with this, lower values are safer, in Ville's script it was changed to 5
+    --num-workers 2   # Some issues with this, lower values are safer, in Ville's script it was changed to 5
 )
 
 MODEL_ARGS=(
@@ -309,12 +318,6 @@ if [ "$NUM_QUERY_GROUPS" != "$NUM_ATTENTION_HEADS" ]; then
     )
 fi
 
-if [ "$TIE_WORD_EMBEDDINGS" = "0" ]; then   ### This part is commented in Ville's version
-    MODEL_ARGS+=(   ### This part is commented in Ville's version
-    --untie-embeddings-and-output-weights   ### This part is commented in Ville's version
-    )   ### This part is commented in Ville's version
-fi  ### This part is commented in Ville's version
-
 if [ "$FSDP" = "1" ]; then
     PARALLEL_ARGS=(
     --use-torch-fsdp2
@@ -323,7 +326,7 @@ else
     PARALLEL_ARGS=(
     --tensor-model-parallel-size $TENSOR_MODEL_PARALLEL_SIZE
     --pipeline-model-parallel-size $PIPELINE_MODEL_PARALLEL_SIZE
-    --context-parallel-size $CONTEXT_PARALLEL_SIZE  ### Removed in Ville's version
+    --context-parallel-size $CONTEXT_PARALLEL_SIZE
     --sequence-parallel
     --use-distributed-optimizer
     )
@@ -332,8 +335,8 @@ fi
 if [ "$PROFILE" = "1" ]; then
     PROFILE_ARGS=(
     --use-pytorch-profiler
-    --profile-ranks 0 # In Ville's script added $LAST_RANK: LAST_RANK=$((SLURM_NTASKS - 1))
-    --profile-step-start 6 # original script: 5
+    --profile-ranks 0
+    --profile-step-start 6
     --profile-step-end 7
     )
 else
@@ -346,7 +349,7 @@ MODEL_ARGS+=(
     --max-position-embeddings $SEQ_LENGTH
     --seq-length $SEQ_LENGTH
     --position-embedding-type rope
-    --use-rotary-position-embeddings ### Original script: --rotary-base $ROTARY_BASE
+    --rotary-base $ROTARY_BASE
     --disable-bias-linear
     --init-method-std $INIT_METHOD_STD
     --attention-dropout 0.0
@@ -357,10 +360,10 @@ MODEL_ARGS+=(
     --train-iters $TRAIN_ITERS
     --bf16
     --swiglu
-    # Original sctipt: --no-async-tensor-model-parallel-allreduce
+    --no-async-tensor-model-parallel-allreduce
     --no-masked-softmax-fusion
     --no-gradient-accumulation-fusion
-    # Original sctipt: --no-bias-dropout-fusion
+    --no-bias-dropout-fusion
     --no-rope-fusion    # buggy on AMD, do not enable without validating
     --distributed-timeout-minutes 30
     --overlap-grad-reduce
@@ -382,7 +385,6 @@ OPTIMIZER_ARGS=(
     --lr-wsd-decay-iters $LR_WSD_DECAY_ITERS
     --clip-grad $CLIP_GRAD
     --weight-decay $WEIGHT_DECAY
-    --use-distributed-optimizer ## Added in Ville's sxcript
 )
 
 OUTPUT_ARGS=(
@@ -397,9 +399,6 @@ OUTPUT_ARGS=(
     --log-progress
     --log-interval $LOG_INTERVAL
 )
-# Second script: removed --log-progress
-# Second script: added --log-timers-to-tensorboard, --log-params-norm, and --no-one-logger
-# Second script: output args are conditionally added if ENABLE_WANDB is 1
 
 # Interleaved pipeline scheduling is only possible with pipeline
 # parallel degree > 1.
@@ -418,8 +417,7 @@ fi
 
 CHECKPOINT_ARGS=(
     --ckpt-format torch    # "legacy" checkpoints; torch_dist is crashing
-#     --async-save    # requires --ckpt-format torch_dist
-    --load "$CHECKPOINT_PATH" # Ville's script: removes --load
+    --load "$CHECKPOINT_PATH"
     --save "$CHECKPOINT_PATH"
     --save-interval $SAVE_INTERVAL
 )
@@ -462,5 +460,3 @@ srun \
     $COMMAND
 
 echo "END $SLURM_JOBID: $(date)"
-# Second script: added 'wd' variable and used it to bind the current directory
-# Second script: also added 'echo' statements to print container and working directory
